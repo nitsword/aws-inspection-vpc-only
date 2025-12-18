@@ -1,5 +1,5 @@
 application = "ntw"
-environment = "non-production::dev"
+environment = "Non-production::Dev"
 env = "dev"
 region = "us-east-1"
 azs = ["us-east-1a", "us-east-1b", "us-east-1d"]
@@ -14,7 +14,6 @@ private_tg_cidrs       = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
 private_firewall_cidrs = ["10.1.1.0/24", "10.1.2.0/24", "10.1.3.0/24"]
 
 # Routing and Firewall Setup
-firewall_endpoint_cidr = "0.0.0.0/0"
 #firewall_name = "inspection-firewall-dev-us-east-1"
 #irewall_policy_name = "inspection-firewall-policy-dev"
 

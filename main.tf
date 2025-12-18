@@ -184,3 +184,16 @@ module "route_tables" {
     for ss in module.firewall.firewall_sync_states : ss.availability_zone => ss.attachment[0].endpoint_id
   }*/
 }
+
+module "secure_s3_bucket" {
+  source = "./modules/s3_bucket"
+  application = var.application
+  environment         = var.environment
+  env                      = var.env
+  base_tags           = var.base_tags
+  bucket_name = var.bucket_name
+  
+  allowed_principal_arns = [
+      "arn:aws:iam::359416636780:user/terraform-test"
+  ]
+}

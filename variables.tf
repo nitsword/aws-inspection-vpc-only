@@ -167,3 +167,9 @@ variable "secondary_cidr_blocks" {
   type        = list(string)
   description = "List of secondary IPv4 CIDR blocks passed from dev.tfvars"
 }
+
+variable "bucket_name" {
+  description = "Name of the s3 bucket"
+  type        = string
+  default     = ""
+}
