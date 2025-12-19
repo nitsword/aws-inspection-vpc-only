@@ -142,10 +142,17 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
   dns_support = "enable"
   transit_gateway_default_route_table_association = true
   transit_gateway_default_route_table_propagation = true
-
-  tags = {
-    Name = "tgw-attachment-${var.environment}"
-  }
+  
+  tags = merge(
+  {
+    Name                  = "${var.application}-${var.env}-tgw-attachment"
+    "Resource Type"       = "tgw-attachment"
+    "Creation Date"       = timestamp()
+    "Environment"         = var.environment
+    "Application" = var.application
+    "Created by"          = "Cloud Network Team"
+  },var.base_tags
+)
 }
 
 
