@@ -13,8 +13,6 @@ resource "aws_security_group" "firewall_sg" {
     # IPv4 CIDRs from your dev.tfvars
     cidr_blocks      = var.tg_ipv4_cidrs
     
-    # DYNAMIC IPv6 CIDRs from the subnets module output
-    # This ensures it matches the random prefix AWS assigns
     ipv6_cidr_blocks = var.private_tg_subnet_ipv6_prefixes 
   }
 
