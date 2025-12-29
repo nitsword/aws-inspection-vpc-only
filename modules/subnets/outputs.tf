@@ -16,8 +16,8 @@ output "private_tg_subnet_ipv6_prefixes" {
   value       = aws_subnet.private_tg[*].ipv6_cidr_block
 }
 
-# output "public_subnet_ids" {
-#   value       = aws_subnet.public.*.id
-#   description = "List of public subnet IDs"
-# }
+output "private_tg_subnet_ipv4_cidrs" {
+  description = "List of IPv4 CIDR blocks for the TG subnets"
+  value       = aws_subnet.private_tg[*].cidr_block
+}
 

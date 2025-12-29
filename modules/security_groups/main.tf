@@ -1,5 +1,5 @@
 resource "aws_security_group" "firewall_sg" {
-  name        = "firewall-sg"
+  name        = "${var.application}-${var.env}-firewall-sg"
   description = "Security group for firewall endpoints"
   vpc_id      = var.vpc_id
 
@@ -10,12 +10,10 @@ resource "aws_security_group" "firewall_sg" {
     to_port          = 0
     protocol         = "-1" # All traffic
     
-    # IPv4 CIDRs from your dev.tfvars
-    cidr_blocks      = var.tg_ipv4_cidrs
-    
-    # DYNAMIC IPv6 CIDRs from the subnets module output
-    # This ensures it matches the random prefix AWS assigns
-    ipv6_cidr_blocks = var.private_tg_subnet_ipv6_prefixes 
+    # FIX: compact() removes empty strings ("") from the lists.
+    # This prevents the "invalid CIDR address" error during the initial IPAM allocation.
+    cidr_blocks      = compact(var.tg_ipv4_cidrs)
+    ipv6_cidr_blocks = compact(var.private_tg_subnet_ipv6_prefixes)
   }
 
   # Outbound Rules
@@ -32,11 +30,11 @@ resource "aws_security_group" "firewall_sg" {
     {
       Name            = "${var.application}-${var.env}-sg-${var.region}"
       "Resource Type" = "security-group"
-      "Creation Date" = timestamp()
       "Environment"   = var.environment
       "Application"   = var.application
       "Created by"    = "Cloud Network Team"
       "Region"        = var.region
-    }, var.base_tags
+    }, 
+    var.base_tags
   )
 }

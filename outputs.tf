@@ -20,5 +20,5 @@ output "firewall_arn" {
 
 output "vpc_ipv6_cidr_block" {
   description = "The primary IPv6 CIDR block assigned to the VPC."
-  value       = module.vpc.vpc_ipv6_cidr_block 
+  value       = module.vpc.vpc_ipv6_cidr_block
 }

@@ -1,13 +1,6 @@
-## modules/subnets/variables.tf
-
-# variable "vpc_id" {
-#   description = "VPC ID"
-#   type        = string
-# }
-
-variable "vpc_secondary_id" {
+variable "vpc_id" {
+  description = "VPC ID"
   type        = string
-  description = "The VPC ID associated with secondary CIDR blocks"
 }
 
 variable "azs" {
@@ -18,16 +11,6 @@ variable "azs" {
 variable "vpc_ipv6_cidr" {
   description = "The primary IPv6 CIDR block assigned to the VPc"
   type        = string
-}
-
-variable "private_tg_cidrs" {
-  description = "List of IPv4 CIDRs for private TG subnets"
-  type        = list(string)
-}
-
-variable "private_firewall_cidrs" {
-  description = "List of IPv4 CIDRs for private firewall subnets"
-  type        = list(string)
 }
 
 variable "tags" {
