@@ -24,8 +24,8 @@ resource "aws_subnet" "private_tg" {
 
   tags = merge(
   {
-    Name                  = "${var.application}-${var.env}-subnet-tg-${var.azs[count.index]}"
-    "Resource Type"       = "subnet-tg"
+    Name                  = "${var.application}-${var.env}-pvt-subnet-tg-${var.azs[count.index]}"
+    "Resource Type"       = "pvt-subnet-tg"
     "Creation Date"       = timestamp()
     "Environment"         = var.environment
     "Application" = var.application
@@ -53,8 +53,8 @@ resource "aws_subnet" "private_firewall" {
 
   tags = merge(
   {
-    Name                  = "${var.application}-${var.env}-subnet-fw-${var.azs[count.index]}"
-    "Resource Type"       = "subnet-fw"
+    Name                  = "${var.application}-${var.env}-pvt-subnet-fw-${var.azs[count.index]}"
+    "Resource Type"       = "pvt-subnet-fw"
     "Creation Date"       = timestamp()
     "Environment"         = var.environment
     "Application" = var.application

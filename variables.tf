@@ -37,6 +37,7 @@ variable "private_firewall_ipv6_cidrs" {
   type        = list(string)
   default     = []
 }
+
 variable "tags" {
   type        = map(string)
   description = "Tags to apply to resources"

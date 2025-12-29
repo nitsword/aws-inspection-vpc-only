@@ -12,7 +12,7 @@
     provider "aws" {
     region = var.region
     }
- 
+    
 
 module "vpc" {
     source              = "./modules/vpc"
@@ -62,15 +62,17 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
   ipv6_support = "enable"
 
   dns_support = "enable"
+  appliance_mode_support = "enable"
   transit_gateway_default_route_table_association = true
   transit_gateway_default_route_table_propagation = true
   
   tags = merge(
   {
-    Name                  = "${var.application}-${var.env}-tgw-attachment"
+    Name                  = "${var.application}-${var.env}-inspection-vpc-${var.region}-tgw-attachment"
     "Resource Type"       = "tgw-attachment"
     "Creation Date"       = timestamp()
     "Environment"         = var.environment
+    "Region"              = var.region
     "Application" = var.application
     "Created by"          = "Cloud Network Team"
   },var.base_tags
@@ -93,6 +95,7 @@ module "route_tables" {
   private_tg_subnets_full     = module.subnets.private_tg_subnets 
   private_tg_subnet_ids       = module.subnets.private_tg_subnet_ids
   private_firewall_subnet_ids = module.subnets.private_firewall_subnet_ids
+
 }
 
 module "secure_s3_bucket" {

@@ -1,5 +1,6 @@
 resource "aws_s3_bucket" "this" {
-  bucket = "${var.application}-${var.env}-firewall-logs-bucket"
+  bucket = "${var.application}-${var.env}-tmo-firewall-logs-bucket"
+  force_destroy = true
   
     tags = merge(
   {
@@ -9,8 +10,18 @@ resource "aws_s3_bucket" "this" {
     "Environment"         = var.environment
     "Application" = var.application
     "Created by"          = "Cloud Network Team"
+    "breadthOfConsumption"  = "Single"
+    "dataSensitivity"      = "Internal"
+    "dangerOfExploitation"  = "INA"
   },var.base_tags
 )
+}
+
+resource "aws_s3_bucket_versioning" "this" {
+  bucket = aws_s3_bucket.this.id
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "this" {
@@ -24,27 +35,20 @@ resource "aws_s3_bucket_public_access_block" "this" {
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "bucket_policy" {
-
-  # ------------------------------------------------
-  # Allow AWS Network Firewall log delivery
-  # ------------------------------------------------
+  
+  # Allow Firewall Log Delivery
   statement {
     sid    = "AllowNetworkFirewallLogs"
     effect = "Allow"
-
     principals {
       type        = "Service"
       identifiers = ["delivery.logs.amazonaws.com"]
     }
-
-    actions = [
-      "s3:PutObject"
-    ]
-
+    actions = ["s3:PutObject", "s3:GetBucketAcl"]
     resources = [
-      "${aws_s3_bucket.this.arn}/AWSLogs/*"
+      aws_s3_bucket.this.arn,
+      "${aws_s3_bucket.this.arn}/*"
     ]
-
     condition {
       test     = "StringEquals"
       variable = "aws:SourceAccount"
@@ -52,63 +56,96 @@ data "aws_iam_policy_document" "bucket_policy" {
     }
   }
 
-  # ------------------------------------------------
-  # Deny non-TLS access
-  # ------------------------------------------------
+  # IP & SERVICE GUARDRAIL: Block access outside trusted IPs and AWS Services
   statement {
-    sid    = "DenyInsecureTransport"
+    sid    = "RestrictAccessToTrustedIPs"
     effect = "Deny"
-
     principals {
       type        = "*"
       identifiers = ["*"]
     }
-
     actions   = ["s3:*"]
     resources = [
       aws_s3_bucket.this.arn,
       "${aws_s3_bucket.this.arn}/*"
     ]
-
+    
+    # Logic: Deny IF (Not in these IPs) AND (Not an AWS Service)
+    condition {
+      test     = "NotIpAddress"
+      variable = "aws:SourceIp"
+      values   = ["208.54.0.0/17", "206.29.160.0/19", "122.161.77.123/32"]
+    }
     condition {
       test     = "Bool"
-      variable = "aws:SecureTransport"
+      variable = "aws:ViaAWSService"
       values   = ["false"]
+    }
+    # SAFETY VALVE: Exclude your own management role so you don't lock yourself out
+    condition {
+      test     = "StringNotLike"
+      variable = "aws:PrincipalArn"
+      values   = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/*",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/*"
+        ]
+    }
+    # Exempt the Log Delivery Service itself
+    condition {
+      test     = "StringNotLike"
+      variable = "aws:PrincipalServiceName"
+      values   = ["delivery.logs.amazonaws.com"]
+    }
+  }
+
+  # Deny non-TLS access
+  statement {
+    sid    = "DenyInsecureTransport"
+    effect = "Deny"
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    actions   = ["s3:*"]
+    resources = [aws_s3_bucket.this.arn, "${aws_s3_bucket.this.arn}/*"]
+    condition {
+      test     = "Bool" 
+      variable = "aws:SecureTransport" 
+      values = ["false"]
     }
   }
 }
 
-
 resource "aws_s3_bucket_policy" "this" {
-  bucket = aws_s3_bucket.this.id
-  policy = data.aws_iam_policy_document.bucket_policy.json
-
-  depends_on = [
-    aws_s3_bucket_public_access_block.this
-  ]
+  bucket     = aws_s3_bucket.this.id
+  policy     = data.aws_iam_policy_document.bucket_policy.json
+  depends_on = [aws_s3_bucket_public_access_block.this]
 }
 
 resource "aws_s3_bucket_ownership_controls" "this" {
   bucket = aws_s3_bucket.this.id
-
   rule {
     object_ownership = "BucketOwnerEnforced"
   }
 }
 
+# --- 3. LIFECYCLE RULE (180 Days) ---
 resource "aws_s3_bucket_lifecycle_configuration" "this" {
   bucket = aws_s3_bucket.this.id
 
   rule {
-    id     = "firewall-logs-retention"
+    id     = "lifecycle rule"
     status = "Enabled"
-
-    filter {
-      prefix = "AWSLogs/"
-    }
+    filter {}
 
     expiration {
-      days = 90
+      days = 180
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 180
     }
   }
 }
+
+

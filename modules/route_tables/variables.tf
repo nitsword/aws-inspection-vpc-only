@@ -23,7 +23,6 @@ variable "firewall_subnet_ids" {
   default = []
 }
 
-
 variable "tags" {
   description = "Tags to apply to the VPC"
   type        = map(string)
@@ -47,14 +46,11 @@ variable "tgw_attachment_id" {
   default     = ""
 }
 
-
-
 variable "enable_ipv6" {
   description = "Enable IPv6 routes in TGW subnet route tables."
   type        = bool
   default     = true
 }
-
 
 # subnet objects AZ 
 variable "private_tg_subnets_full" {
