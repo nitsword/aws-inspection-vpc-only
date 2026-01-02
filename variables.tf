@@ -15,11 +15,6 @@ variable "ipv4_ipam_pool_id" {
   type        = string
 }
 
-variable "ipv4_netmask_length" {
-  description = "The netmask length for the primary VPC IPv4 CIDR (e.g., 24)"
-  type        = number
-  default     = 24
-}
 
 variable "ipv6_ipam_pool_id" {
   description = "The ID of the IPv6 IPAM pool (null to use Amazon default)"
@@ -67,8 +62,10 @@ variable "bucket_name" {
   default     = ""
 }
 
-variable "vpc_netmask" {
-  description = "The netmask length for the VPC IPv4 CIDR"
-  type        = number
-  # default     = 24 
-}
+
+variable "tgw_subnet_cidrs" { type = map(string) }
+variable "fw_subnet_cidrs" { type = map(string) }
+
+variable "vpc_primary_cidr" { type = string }
+variable "vpc_secondary_cidr" { type = string }
+variable "vpc_primary_ipv6_cidr" { type = string }

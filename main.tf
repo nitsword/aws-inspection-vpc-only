@@ -14,30 +14,33 @@ provider "aws" {
 
 module "vpc" {
   source = "./modules/vpc"
-  
-  ipv4_ipam_pool_id     = var.ipv4_ipam_pool_id
-  ipv4_netmask_length   = var.ipv4_netmask_length
-  ipv6_ipam_pool_id     = var.ipv6_ipam_pool_id
-  azs                   = var.azs
-  application           = var.application
-  environment           = var.environment
-  env                   = var.env
-  region                = var.region
-  base_tags             = var.base_tags
-  vpc_netmask           = var.vpc_netmask
-  secondary_cidr_blocks = var.secondary_cidr_blocks
+  # IPAM Inputs
+  ipv4_ipam_pool_id       = var.ipv4_ipam_pool_id
+  ipv6_ipam_pool_id       = var.ipv6_ipam_pool_id
+  azs                     = var.azs
+  application             = var.application
+  environment             = var.environment
+  env                     = var.env
+  region                  = var.region
+  base_tags               = var.base_tags
+  vpc_primary_cidr        = var.vpc_primary_cidr
+  vpc_secondary_cidr      = var.vpc_secondary_cidr
+  vpc_primary_ipv6_cidr   = var.vpc_primary_ipv6_cidr
+
 }
 
 module "subnets" {
-  source        = "./modules/subnets"
-  vpc_id        = module.vpc.vpc_id
-  azs           = var.azs
-  application   = var.application
-  environment   = var.environment
-  region        = var.region
-  env           = var.env
-  base_tags     = var.base_tags
-  vpc_ipv6_cidr = module.vpc.vpc_ipv6_cidr_block
+  source                  = "./modules/subnets"
+  vpc_id                  = module.vpc.vpc_id
+  azs                     = var.azs
+  application             = var.application
+  environment             = var.environment
+  region                  = var.region
+  env                     = var.env
+  base_tags               = var.base_tags
+  tgw_subnet_cidrs        = var.tgw_subnet_cidrs
+  fw_subnet_cidrs         = var.fw_subnet_cidrs
+  vpc_ipv6_cidr_primary   = var.vpc_primary_ipv6_cidr
 
   depends_on = [module.vpc]
 }
@@ -85,20 +88,19 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
 }
 
 module "route_tables" {
-  source                      = "./modules/route_tables"
-  vpc_id                      = module.vpc.vpc_id
-  application                 = var.application
-  environment                 = var.environment
-  region                      = var.region
-  azs                         = var.azs
-  env                         = var.env
-  base_tags                   = var.base_tags
-  transit_gateway_id          = var.transit_gateway_id
-  tgw_attachment_id           = aws_ec2_transit_gateway_vpc_attachment.this.id
-  enable_ipv6                 = true
-  private_tg_subnets_full     = module.subnets.private_tg_subnets
-  private_tg_subnet_ids       = module.subnets.private_tg_subnet_ids
-  private_firewall_subnet_ids = module.subnets.private_firewall_subnet_ids
+  source             = "./modules/route_tables"
+  vpc_id             = module.vpc.vpc_id
+  application        = var.application
+  environment        = var.environment
+  region             = var.region
+  azs                = var.azs
+  env                = var.env
+  base_tags          = var.base_tags
+  transit_gateway_id = var.transit_gateway_id
+  tgw_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this.id
+  enable_ipv6        = true
+  tg_subnet_map      = module.subnets.tg_subnet_az_map
+  fw_subnet_map      = module.subnets.fw_subnet_az_map
 }
 
 module "secure_s3_bucket" {

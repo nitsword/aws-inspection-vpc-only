@@ -3,21 +3,10 @@ variable "ipv4_ipam_pool_id" {
   type        = string
 }
 
-variable "ipv4_netmask_length" {
-  description = "Netmask length for the primary IPv4 CIDR"
-  type        = number
-  default     = 24
-}
-
 variable "ipv6_ipam_pool_id" {
   description = "The ID of the IPAM pool for IPv6"
   type        = string
   default     = null
-}
-
-variable "secondary_cidr_blocks" {
-  type    = list(string)
-  default = []
 }
 
 variable "azs" {
@@ -25,10 +14,10 @@ variable "azs" {
   type        = list(string)
 }
 
-variable "vpc_netmask" {
-  description = "The netmask length for the primary IPv4 CIDR"
-  type        = number
-}
+variable "vpc_primary_cidr"      { type = string }
+variable "vpc_secondary_cidr"    { type = string }
+variable "vpc_primary_ipv6_cidr" { type = string }
+#variable "vpc_secondary_ipv6_cidr" { type = string }
 
 variable "application" { type = string }
 variable "environment" { type = string }

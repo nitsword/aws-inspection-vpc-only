@@ -1,12 +1,3 @@
-variable "private_tg_subnet_ids" {
-  description = "List of private_tg subnet IDs (one per AZ, for TGW attachment)"
-  type        = list(string)
-}
-
-variable "private_firewall_subnet_ids" {
-  description = "List of private_firewall subnet IDs (all subnets for firewall)"
-  type        = list(string)
-}
 variable "vpc_id" {
   description = "VPC ID"
   type        = string
@@ -52,9 +43,15 @@ variable "enable_ipv6" {
   default     = true
 }
 
-# subnet objects AZ 
-variable "private_tg_subnets_full" {
-  description = "The full subnet objects for private_tg"
+
+variable "tg_subnet_map" {
+  type        = map(string)
+  description = "Map of AZ to Subnet ID for TGW subnets"
+}
+
+variable "fw_subnet_map" {
+  type        = map(string)
+  description = "Map of AZ to Subnet ID for Firewall subnets"
 }
 
 variable "application" { type = string }

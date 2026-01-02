@@ -8,10 +8,8 @@ resource "aws_security_group" "firewall_sg" {
     description      = "Allow inbound traffic from TG subnets"
     from_port        = 0
     to_port          = 0
-    protocol         = "-1" # All traffic
+    protocol         = "-1"
     
-    # FIX: compact() removes empty strings ("") from the lists.
-    # This prevents the "invalid CIDR address" error during the initial IPAM allocation.
     cidr_blocks      = compact(var.tg_ipv4_cidrs)
     ipv6_cidr_blocks = compact(var.private_tg_subnet_ipv6_prefixes)
   }
@@ -28,7 +26,7 @@ resource "aws_security_group" "firewall_sg" {
 
   tags = merge(
     {
-      Name            = "${var.application}-${var.env}-sg-${var.region}"
+      Name            = "${var.application}-${var.env}-firewall-sg-${var.region}"
       "Resource Type" = "security-group"
       "Environment"   = var.environment
       "Application"   = var.application

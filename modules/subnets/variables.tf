@@ -8,10 +8,6 @@ variable "azs" {
   type        = list(string)
 }
 
-variable "vpc_ipv6_cidr" {
-  description = "The primary IPv6 CIDR block assigned to the VPc"
-  type        = string
-}
 
 variable "tags" {
   description = "Tags to apply to the VPC"
@@ -19,9 +15,14 @@ variable "tags" {
   default     = {}
 }
 
-# variable "private_tg_subnets_full" {
-#   description = "The list of full subnet objects from the subnets module"
-# }
+variable "tgw_subnet_cidrs" { type = map(string) }
+variable "fw_subnet_cidrs"  { type = map(string) }
+
+# IPv6 CIDRs from VPC
+variable "vpc_ipv6_cidr_primary" { 
+  type    = string 
+  default = "" 
+}
 
 variable "application" { type = string }
 variable "environment" { type = string }

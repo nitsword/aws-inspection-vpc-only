@@ -1,7 +1,7 @@
 
 output "private_tg_route_table_ids" {
   description = "IDs of route tables for private_tg subnets (one per AZ)"
-  value       = aws_route_table.private_tg[*].id
+  value       = [for rtb in aws_route_table.private_tg : rtb.id]
 }
 
 output "firewall_route_table_id" {

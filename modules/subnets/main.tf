@@ -1,48 +1,30 @@
-# Data source to fetch the VPC CIDR assigned by IPAM
-data "aws_vpc" "selected" {
-  id = var.vpc_id
-}
-
 ## Subnet Derivation Locals
 locals {
-  # We use the variable directly to ensure the conditional logic is clean
-  vpc_ipv4_cidr = data.aws_vpc.selected.cidr_block
-  vpc_ipv6_cidr         = var.vpc_ipv6_cidr
   new_subnet_bits       = 8
-  
-  # Offsets for IPv4 subnetting to prevent overlap
-  tg_ipv4_offset        = 0
-  fw_ipv4_offset        = 4
-  
-  # Offset for IPv6
-  firewall_index_offset = 100 
+  fw_index_offset = 10
 }
 
 ## Private Transit Gateway (TG) Subnets
 resource "aws_subnet" "private_tg" {
-  count                   = length(var.azs)
-  vpc_id                  = var.vpc_id
+  for_each = var.tgw_subnet_cidrs
+
+  vpc_id            = var.vpc_id
+  availability_zone = each.key
+  cidr_block        = each.value
   
-  # IPv4 calculation
-  #cidr_block              = cidrsubnet(data.aws_vpc.selected.cidr_block, 4, count.index + local.tg_ipv4_offset)
-  
-  availability_zone       = var.azs[count.index]
-  cidr_block = local.vpc_ipv4_cidr != "" ? cidrsubnet(local.vpc_ipv4_cidr, 4, count.index) : null
   map_public_ip_on_launch = false
 
-  # FIX: Only attempt cidrsubnet if IPv6 CIDR is not empty
-  ipv6_cidr_block = local.vpc_ipv6_cidr != "" ? cidrsubnet(
-    local.vpc_ipv6_cidr,
+  ipv6_cidr_block = var.vpc_ipv6_cidr_primary != "" ? cidrsubnet(
+    var.vpc_ipv6_cidr_primary,
     local.new_subnet_bits,
-    count.index
+    index(var.azs, each.key)
   ) : null
 
-  # Only assign if we actually have an IPv6 block
-  assign_ipv6_address_on_creation = local.vpc_ipv6_cidr != "" ? true : false
+  assign_ipv6_address_on_creation = var.vpc_ipv6_cidr_primary != "" ? true : false
 
   tags = merge(
     {
-      Name            = "${var.application}-${var.env}-pvt-subnet-tg-${var.azs[count.index]}"
+      Name            = "${var.application}-${var.env}-pvt-subnet-tg-${each.key}"
       "Resource Type" = "pvt-subnet-tg"
       "Environment"   = var.environment
       "Application"   = var.application
@@ -55,29 +37,25 @@ resource "aws_subnet" "private_tg" {
 
 ## Private Network Firewall Subnets
 resource "aws_subnet" "private_firewall" {
-  count                   = length(var.azs)
-  vpc_id                  = var.vpc_id
+  for_each = var.fw_subnet_cidrs
+
+  vpc_id            = var.vpc_id
+  availability_zone = each.key
+  cidr_block        = each.value
   
-  # IPv4 calculation
-  #cidr_block              = cidrsubnet(data.aws_vpc.selected.cidr_block, 4, count.index + local.fw_ipv4_offset)
-  
-  availability_zone       = var.azs[count.index]
-  cidr_block = local.vpc_ipv4_cidr != "" ? cidrsubnet(local.vpc_ipv4_cidr, 4, count.index + 4) : null
   map_public_ip_on_launch = false
 
-  # FIX: Only attempt cidrsubnet if IPv6 CIDR is not empty
-  ipv6_cidr_block = local.vpc_ipv6_cidr != "" ? cidrsubnet(
-    local.vpc_ipv6_cidr,
+  ipv6_cidr_block = var.vpc_ipv6_cidr_primary != "" ? cidrsubnet(
+    var.vpc_ipv6_cidr_primary,
     local.new_subnet_bits,
-    count.index + local.firewall_index_offset
+    index(var.azs, each.key) + local.fw_index_offset # Uses 10, 11, 12
   ) : null
 
-  # Only assign if we actually have an IPv6 block
-  assign_ipv6_address_on_creation = local.vpc_ipv6_cidr != "" ? true : false
+  assign_ipv6_address_on_creation = var.vpc_ipv6_cidr_primary != "" ? true : false
 
   tags = merge(
     {
-      Name            = "${var.application}-${var.env}-pvt-subnet-fw-${var.azs[count.index]}"
+      Name            = "${var.application}-${var.env}-pvt-subnet-fw-${each.key}"
       "Resource Type" = "pvt-subnet-fw"
       "Environment"   = var.environment
       "Application"   = var.application

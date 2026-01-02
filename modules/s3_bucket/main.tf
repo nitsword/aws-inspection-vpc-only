@@ -56,7 +56,6 @@ data "aws_iam_policy_document" "bucket_policy" {
     }
   }
 
-  # IP & SERVICE GUARDRAIL: Block access outside trusted IPs and AWS Services
   statement {
     sid    = "RestrictAccessToTrustedIPs"
     effect = "Deny"
@@ -70,18 +69,17 @@ data "aws_iam_policy_document" "bucket_policy" {
       "${aws_s3_bucket.this.arn}/*"
     ]
     
-    # Logic: Deny IF (Not in these IPs) AND (Not an AWS Service)
     condition {
       test     = "NotIpAddress"
       variable = "aws:SourceIp"
-      values   = ["208.54.0.0/17", "206.29.160.0/19", "122.161.77.123/32"]
+      values   = ["208.54.0.0/17", "206.29.160.0/19", "122.161.73.119/32"]
     }
     condition {
       test     = "Bool"
       variable = "aws:ViaAWSService"
       values   = ["false"]
     }
-    # SAFETY VALVE: Exclude your own management role so you don't lock yourself out
+    
     condition {
       test     = "StringNotLike"
       variable = "aws:PrincipalArn"
@@ -90,7 +88,7 @@ data "aws_iam_policy_document" "bucket_policy" {
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/*"
         ]
     }
-    # Exempt the Log Delivery Service itself
+  
     condition {
       test     = "StringNotLike"
       variable = "aws:PrincipalServiceName"
